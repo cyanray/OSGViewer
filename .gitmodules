@@ -1,0 +1,3 @@
+[submodule "osgQt"]
+	path = osgQt
+	url = https://github.com/cyanray/osgQt.git
