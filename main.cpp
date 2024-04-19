@@ -38,6 +38,39 @@
 
 #include <iostream>
 
+class PickHandler : public osgGA::GUIEventHandler
+{
+public:
+    virtual bool handle(const osgGA::GUIEventAdapter& ea, osgGA::GUIActionAdapter& aa)
+    {
+        if (ea.getEventType() == osgGA::GUIEventAdapter::PUSH &&
+            ea.getButton() == osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON)
+        {
+            osgViewer::Viewer* viewer = dynamic_cast<osgViewer::Viewer*>(&aa);
+            if (viewer)
+            {
+                pick(viewer, ea.getX(), ea.getY());
+            }
+            return true;
+        }
+        return false;
+    }
+
+    void pick(osgViewer::Viewer* viewer, float x, float y)
+    {
+        osg::ref_ptr<osgUtil::LineSegmentIntersector> intersector =
+                new osgUtil::LineSegmentIntersector(osgUtil::Intersector::WINDOW, x, y);
+        osgUtil::IntersectionVisitor iv(intersector);
+        viewer->getCamera()->accept(iv);
+
+        if (intersector->containsIntersections())
+        {
+            auto intersection = intersector->getFirstIntersection();
+            std::cout << "Picked object(" << x << "," << y << "): "
+                      << intersection.nodePath.back()->getName() << std::endl;
+        }
+    }
+};
 
 int main(int argc, char** argv)
 {
@@ -197,6 +230,8 @@ int main(int argc, char** argv)
 
         // add the screen capture handler
         widget.getOsgViewer()->addEventHandler(new osgViewer::ScreenCaptureHandler);
+
+        widget.getOsgViewer()->addEventHandler(new PickHandler());
 
         // load the data
         osg::ref_ptr<osg::Node> loadedModel = osgDB::readRefNodeFiles(arguments);
